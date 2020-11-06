@@ -1,7 +1,9 @@
 const path = require("path")
 const webpack = require('webpack'); //to access built-in plugins
 const childProcess = require('child_process');
-const htmlPlugin = require('html-webpack-plugin');
+const HtmlPlugin = require('html-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
+const MiniCssExtreactPlugin = require('mini-css-extract-plugin');
 // const banner =`
 //   Building Data : ${new Date().toLocaleString()}
 //   Commit version : ${childProcess.execSync('git rev-parse --short HEAD')}
@@ -23,7 +25,9 @@ module.exports = {
     },{
       test:/\.css$/,
       use:[
-        "style-loader",
+        process.env.NODE_ENV==='production'
+        ?MiniCssExtreactPlugin.loader
+        :"style-loader",
         "css-loader"
       ]
     },{
@@ -46,12 +50,22 @@ module.exports = {
       THREE:JSON.stringify('1+1+1'),  //json 함수를 이용하면 문자열을 넣는다 1+1+1이 들어가있다
       'api.one':'1+1',  //이렇게도 된다
     }),
-    new htmlPlugin({
+    new HtmlPlugin({
       template:'./index.html',
       templateParameters:{
         env:process.env.NODE_ENV==='development'?'개발용':'배포용'
-      }
-    })
+      },
+      minify:process.env.NODE_ENV==='production'?{
+        collapseWhitespace:true,//빈칸제거
+        removeComments:true,//주석제거
+      }:false
+    }),
+    new CleanWebpackPlugin(),
+    ...(process.env.NODE_ENV==='production'?[
+      new MiniCssExtreactPlugin({filename:'[name].css'}),
+      ]:[]
+    )
+  
   ],
 
   output: {
