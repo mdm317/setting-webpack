@@ -3,7 +3,7 @@ const webpack = require('webpack'); //to access built-in plugins
 const childProcess = require('child_process');
 const HtmlPlugin = require('html-webpack-plugin');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
-const MiniCssExtreactPlugin = require('mini-css-extract-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 // const banner =`
 //   Building Data : ${new Date().toLocaleString()}
 //   Commit version : ${childProcess.execSync('git rev-parse --short HEAD')}
@@ -24,12 +24,20 @@ module.exports = {
       use:[path.resolve("./myloader.js")]
     },{
       test:/\.css$/,
-      use:[
-        process.env.NODE_ENV==='production'
-        ?MiniCssExtreactPlugin.loader
-        :"style-loader",
-        "css-loader"
-      ]
+      use: process.env.NODE_ENV==='production'?
+      [
+        {
+          loader: MiniCssExtractPlugin.loader, 
+          options: {
+              publicPath: ''
+          }
+        },
+        {
+          loader: "css-loader"
+        }
+      ]:
+      ["style-loader",
+      "css-loader"]
     },{
       test: /\.(png|jpg|svg|gif)$/,
       loader: 'file-loader',
@@ -62,12 +70,12 @@ module.exports = {
     }),
     new CleanWebpackPlugin(),
     ...(process.env.NODE_ENV==='production'?[
-      new MiniCssExtreactPlugin({filename:'[name].css'}),
+      new MiniCssExtractPlugin({
+        filename:'[name].css',
+      }),
       ]:[]
     )
-  
   ],
-
   output: {
     path: path.resolve("./dist"),
     filename: "[name].js",//앤트리가 2개이상일때 유용
